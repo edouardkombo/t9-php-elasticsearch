@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>T9 Elastic Search</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            div#digits { clear: both; float:left; }
+            div#digits div.row { clear: both; }
+            div#digits div.other { clear: both; float:left;}
+            div#digits div.row div.touch { float:left; font-size:18px; font-weight:bold; padding:15px; margin:2px; background: blue; color:#FFFFFF; }
+            div#digits div.row div.touch:hover { background: green; }
+            div#number { font-weight: bold; }
+        </style>        
+    </head>
+    <body>
+        <div>
+            <form method="POST" action="index.php">
+                <div id='digits'>
+                    <div class='row'>
+                        <div id='1' class='touch'>1</div>
+                        <div id='2' class='touch'>2</div>
+                        <div id='3' class='touch'>3</div>
+                    </div>
+                    <div class='row'>
+                        <div id='4' class='touch'>4</div>
+                        <div id='5' class='touch'>5</div>
+                        <div id='6' class='touch'>6</div>
+                    </div>
+                    <div class='row'>
+                        <div id='7' class='touch'>7</div>
+                        <div id='8' class='touch'>8</div>
+                        <div id='9' class='touch'>9</div>
+                    </div>
+                    <div class='row'>
+                        <div id='star' class='touch'>*</div>
+                        <div id='0' class='touch'>0</div>
+                        <div id='sharp' class='touch'>#</div>
+                    </div>
+                </div>
+                <div class="other">
+                    <br/>
+                    Number: <input type="text" id="number"><br/>
+                </div>
+                <div class="other">
+                    Suggestions: <div id="response"></div><br/>
+                </div>                
+            </form>
+            
+            <script>
+                //Write digits into input text
+                window.addEventListener('click', function(e) {
+                    window.lastElementClicked = e.target;
+                    var id          = window.lastElementClicked.id;
+                    
+                    if ((id!=='number')&&(id!=='star')&&(id!=='sharp')) {
+                        var lastNumber =document.getElementById('number').value; 
+                        document.getElementById('number').value = lastNumber+id;
+                        
+                        suggest();
+                    }
+                });                
+                
+                function suggest()
+                {
+                    var url     = "index.php";
+                    
+                    var datas = new FormData();
+                    var numberField = document.getElementById('number').value;
+                    datas.append('number', numberField);                  
+                    
+                    var client  = new XMLHttpRequest();
+                    client.onreadystatechange = function() 
+                    {
+                        if (client.readyState === 4 && client.status === 200) 
+                        {
+                            //console.log(client.response);
+                            var response   = JSON.parse(client.response);
+                            var suggestion = '';
+                            for(var i=0;i<response.length;i++){
+                                var obj = response[i];
+                                for(var key in obj){
+                                    console.log(obj[key]);
+                                    suggestion += obj[key] + ', ';
+                                }
+                            }
+                            document.getElementById('response').innerHTML = suggestion;
+                        }
+
+                    }.bind(this);                    
+                    client.open("post", url, true);
+                    client.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+                    client.setRequestHeader("cache-Control", "no-store, no-cache, must-revalidate");
+                    client.setRequestHeader("cache-Control", "post-check=0, pre-check=0");
+                    client.setRequestHeader("cache-Control", "max-age=0");
+                    client.setRequestHeader("Pragma", "no-cache");
+                    client.send(datas);                    
+                }                
+            </script>
+        </div>
+    </body>
+</html>
